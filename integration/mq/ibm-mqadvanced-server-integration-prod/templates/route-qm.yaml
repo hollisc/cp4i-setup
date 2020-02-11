@@ -21,6 +21,7 @@ metadata:
 {{ include "sch.metadata.labels.standard" (list . "") | indent 4 }}
 {{- include "ibm-mq.sch.chart.config.metadata.labels" . | indent 4 }}
 spec:
+  host: mq-dev-ibm-mq-qm-mq.apps.rsundara.ocp.csplab.local
   to:
     kind: Service
     name: {{ include "sch.names.fullName" (list .) }}
@@ -29,3 +30,10 @@ spec:
     targetPort: 1414
   tls:
     termination: passthrough
+status:
+  ingress:
+  - conditions:
+    host: mq-dev-ibm-mq-qm-mq.apps.rsundara.ocp.csplab.local
+    routerCanonicalHostname: apps.rsundara.ocp.csplab.local
+    routerName: default
+    wildcardPolicy: None

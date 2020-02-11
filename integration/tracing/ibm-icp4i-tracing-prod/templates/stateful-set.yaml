@@ -37,7 +37,7 @@ spec:
         productName: 'IBM Cloud Pak for Integration OD Add-On'
         productVersion: '1.0.1'
         productMetric: 'VPC'
-        productChargedContainers:
+#        productChargedContainers:
         productCloudpakRatio: '1:1'
         cloudpakName: 'IBM Cloud Pak for Integration'
         cloudpakId: 'c8b82d189e7545f0892db9ef2731b90d'
@@ -55,21 +55,21 @@ spec:
         - name: {{ .Values.global.images.pullSecret }}
       {{- end }}
       containers:
-      ####################### ui-manager ##################################### 
+      ####################### ui-manager #####################################
       - name: ui-manager
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdUiManager }}"
-        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }} 
+        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         volumeMounts:
         - name: ibm-ca-chain
           mountPath: "/usr/local/tomee/conf/cert/ibmca"
         - name: icp4i-od-ca-certificate
-          mountPath: "/usr/local/tomee/conf/cert/odca" 
+          mountPath: "/usr/local/tomee/conf/cert/odca"
         - name: mng-shared
-          mountPath: "/mnt/icp4iod/shared" 
+          mountPath: "/mnt/icp4iod/shared"
           readOnly: false
         resources:
 {{ toYaml .Values.resources.ui_manager | indent 11 }}
-        env:          
+        env:
           - name: "OD_ES_USER"
             valueFrom:
               secretKeyRef:
@@ -81,14 +81,14 @@ spec:
                 name: icp4i-od-elastic-credentials
                 key: password
           - name: "OD_ES_ADDRESSES"
-            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"         
+            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"
           - name: "OD_ICI_NAVIGATOR_URL"
-            value: "https://{{ .Values.platformNavigatorHost }}" 
+            value: "https://{{ .Values.platformNavigatorHost }}"
           - name: "OD_CA_CERTIFICATE"
             valueFrom:
               secretKeyRef:
                 name: icp4i-od-ca-certificate
-                key: certificate  
+                key: certificate
           - name: OD_OIDC_CLIENT_ID
             valueFrom:
               secretKeyRef:
@@ -115,22 +115,22 @@ spec:
                 name: icp4i-od-oidc-secret
                 key: iam_teams_role_url
           - name: OD_NAMESPACE
-            value: {{ .Release.Namespace | quote }}   
-          - name: OD_IBM_CA_CHAIN     
-            value: '/usr/local/tomee/conf/cert/ibmca/icp_ca_chain.crt'     
-          - name: OD_CA     
-            value: '/usr/local/tomee/conf/cert/odca/icp4i-od-cacert.pem'             
+            value: {{ .Release.Namespace | quote }}
+          - name: OD_IBM_CA_CHAIN
+            value: '/usr/local/tomee/conf/cert/ibmca/icp_ca_chain.crt'
+          - name: OD_CA
+            value: '/usr/local/tomee/conf/cert/odca/icp4i-od-cacert.pem'
           - name: OD_RELEASE
-            value: {{  .Release.Name  | quote }}  
+            value: {{  .Release.Name  | quote }}
           - name: OD_CLUSTER_NAME
             valueFrom:
               secretKeyRef:
                 name: icp4i-od-oidc-secret
                 key: clusterName
-          - name: OD_REALM_CONFIG_FILE_PATH 
-            value: '/mnt/icp4iod/shared/conf/realm.properties'    
+          - name: OD_REALM_CONFIG_FILE_PATH
+            value: '/mnt/icp4iod/shared/conf/realm.properties'
           - name: OD_WEB_CONSOLE_CONTEXT_ROOT
-            value: {{ .Values.ingress.odURI | quote }}              
+            value: {{ .Values.ingress.odURI | quote }}
         ports:
         - name: tomee-ui
           containerPort: 8085
@@ -150,15 +150,15 @@ spec:
           timeoutSeconds: 2
           periodSeconds: 5
           failureThreshold: 2
-#######################################################################   
-####################### ui-proxy ######################################                  
+#######################################################################
+####################### ui-proxy ######################################
       - name: ui-proxy
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdUiProxy }}"
         imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         #command: ["tail","-f","/dev/null"]
         volumeMounts:
         - name: ibm-ca-chain
-          mountPath: "/etc/httpd/conf/cert/ibmca" 
+          mountPath: "/etc/httpd/conf/cert/ibmca"
         resources:
 {{ toYaml .Values.resources.ui_proxy | indent 11 }}
         env:
@@ -166,7 +166,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: icp4i-od-oidc-secret
-                key: oidc_provider_metadata_url           
+                key: oidc_provider_metadata_url
           - name: OD_OIDC_CLIENT_ID
             valueFrom:
               secretKeyRef:
@@ -179,11 +179,11 @@ spec:
                 key: CLIENT_SECRET
           - name: OD_OIDC_PASSPHRASE
             value: {{ randAlphaNum 32 | b64enc | quote }}
-          - name: OD_IBM_CA_CHAIN     
+          - name: OD_IBM_CA_CHAIN
             value: '/etc/httpd/conf/cert/ibmca/icp_ca_chain.crt'
           - name: OD_WEB_CONSOLE_CONTEXT_ROOT
-            value: {{ .Values.ingress.odURI | quote }}              
-        ports:    
+            value: {{ .Values.ingress.odURI | quote }}
+        ports:
         - name: reg-https
           containerPort: 443
         livenessProbe:
@@ -191,7 +191,7 @@ spec:
             command:
               - curl
               - -XGET
-              - --insecure            
+              - --insecure
               - https://localhost:443/
           initialDelaySeconds: 10
           timeoutSeconds: 2
@@ -202,18 +202,18 @@ spec:
             command:
               - curl
               - -XGET
-              - --insecure            
+              - --insecure
               - https://localhost:443/
           initialDelaySeconds: 10
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
-#######################################################################################                
-####################### sidecar registration-endpoint #################################                  
+#######################################################################################
+####################### sidecar registration-endpoint #################################
       - name: registration-endpoint
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdRegistrationEndpoint }}"
         imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
-        ports:    
+        ports:
         - name: reg-https
           containerPort: 8090
         livenessProbe:
@@ -221,47 +221,47 @@ spec:
             command:
               - curl
               - -XGET
-              - --insecure            
+              - --insecure
               - https://localhost:8090/
           initialDelaySeconds: 10
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 3
         readinessProbe:
           exec:
             command:
               - curl
               - -XGET
-              - --insecure            
+              - --insecure
               - https://localhost:8090/
           initialDelaySeconds: 10
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
         volumeMounts:
         - name: registration-data
           mountPath: /var/log/httpd24
         resources:
-{{ toYaml .Values.resources.registration_endpoint | indent 11 }}          
-###########################################################################          
-####################### sidecar config-db #################################         
+{{ toYaml .Values.resources.registration_endpoint | indent 11 }}
+###########################################################################
+####################### sidecar config-db #################################
       - name: config-db
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdConfigDb }}"
-        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}  
-        #command: ["tail","-f","/dev/null"]   
+        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
+        #command: ["tail","-f","/dev/null"]
         ports:
         - containerPort: 1527
           protocol: TCP
         volumeMounts:
           - name: config-db
-            mountPath: /mnt/data    
+            mountPath: /mnt/data
         livenessProbe:
           exec:
             command:
               - /usr/local/bin/test_db.sh
           initialDelaySeconds: 10
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 5
         readinessProbe:
           exec:
@@ -269,48 +269,48 @@ spec:
               - /usr/local/bin/test_db.sh
           initialDelaySeconds: 10
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
         resources:
-{{ toYaml .Values.configdb.resources | indent 11 }}                    
-########################################################################################         
-####################### sidecar registration-processor #################################         
+{{ toYaml .Values.configdb.resources | indent 11 }}
+########################################################################################
+####################### sidecar registration-processor #################################
       - name: registration-processor
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdRegistrationProcessor }}"
-        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }} 
+        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         env:
           - name: OD_WEB_CONSOLE_CONTEXT_ROOT
-            value: {{ .Values.ingress.odURI | quote }}                      
+            value: {{ .Values.ingress.odURI | quote }}
         livenessProbe:
           tcpSocket:
             port: 7777
           initialDelaySeconds: 10
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
             port: 7777
           initialDelaySeconds: 10
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
         volumeMounts:
         - name: registration-data
-          mountPath: /var/log/httpd24  
+          mountPath: /var/log/httpd24
         - name: mng-shared
-          mountPath: "/mnt/icp4iod/shared" 
+          mountPath: "/mnt/icp4iod/shared"
           readOnly: true
         resources:
-{{ toYaml .Values.resources.registration_processor | indent 11 }}                              
+{{ toYaml .Values.resources.registration_processor | indent 11 }}
 #################################################################################
-####################### sidecar store-retention #################################         
+####################### sidecar store-retention #################################
       - name: store-retention
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdStoreRetention }}"
-        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }} 
+        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         resources:
-{{ toYaml .Values.resources.store_retention | indent 11 }}                                      
-        env:          
+{{ toYaml .Values.resources.store_retention | indent 11 }}
+        env:
           - name: "OD_ES_USER"
             valueFrom:
               secretKeyRef:
@@ -327,40 +327,40 @@ spec:
                 name: icp4i-od-es-admin-keystore-pass
                 key: password
           - name: "OD_ES_ADDRESSES"
-            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"  
+            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"
           - name: "OD_ES_STORAGESIZE"
-            value: {{ .Values.elasticsearch.volumeClaimTemplate.resources.requests.storage | quote }}  
+            value: {{ .Values.elasticsearch.volumeClaimTemplate.resources.requests.storage | quote }}
           - name: OD_WEB_CONSOLE_CONTEXT_ROOT
-            value: {{ .Values.ingress.odURI | quote }}                          
+            value: {{ .Values.ingress.odURI | quote }}
         ports:
         livenessProbe:
           tcpSocket:
             port: 8071
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
             port: 8071
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
         volumeMounts:
         - name: mng-shared
-          mountPath: "/mnt/icp4iod/shared" 
+          mountPath: "/mnt/icp4iod/shared"
           readOnly: true
         - name: icp4i-od-es-admin-keystore
           mountPath: "/usr/local/tomee/conf/cert/odadminkeystore"
 ##############################################################################
-####################### sidecar housekeeping #################################         
+####################### sidecar housekeeping #################################
       - name: housekeeping
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdRetention }}"
-        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }} 
+        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         resources:
-{{ toYaml .Values.resources.housekeeping | indent 11 }}                             
-        env:          
+{{ toYaml .Values.resources.housekeeping | indent 11 }}
+        env:
           - name: "OD_ES_USER"
             valueFrom:
               secretKeyRef:
@@ -372,36 +372,36 @@ spec:
                 name: icp4i-od-elastic-credentials
                 key: password
           - name: "OD_ES_ADDRESSES"
-            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"  
+            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"
           - name: OD_WEB_CONSOLE_CONTEXT_ROOT
-            value: {{ .Values.ingress.odURI | quote }}                          
+            value: {{ .Values.ingress.odURI | quote }}
         ports:
         livenessProbe:
           tcpSocket:
             port: 8072
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
             port: 8072
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
         volumeMounts:
         - name: mng-shared
-          mountPath: "/mnt/icp4iod/shared" 
+          mountPath: "/mnt/icp4iod/shared"
           readOnly: true
 #########################################################################
-####################### sidecar reports #################################         
+####################### sidecar reports #################################
       - name: reports
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdReports }}"
         imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         resources:
-{{ toYaml .Values.resources.reports | indent 11 }}                                     
-        env:          
+{{ toYaml .Values.resources.reports | indent 11 }}
+        env:
           - name: "OD_ES_USER"
             valueFrom:
               secretKeyRef:
@@ -413,50 +413,50 @@ spec:
                 name: icp4i-od-elastic-credentials
                 key: password
           - name: "OD_ES_ADDRESSES"
-            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"  
-          - name: OD_IBM_CA_CHAIN     
-            value: '/usr/local/tomee/conf/cert/ibmca/icp_ca_chain.crt'     
-          - name: OD_CA     
-            value: '/usr/local/tomee/conf/cert/odca/icp4i-od-cacert.pem'   
+            value: "od-store-od.{{ .Release.Namespace }}.svc:9200"
+          - name: OD_IBM_CA_CHAIN
+            value: '/usr/local/tomee/conf/cert/ibmca/icp_ca_chain.crt'
+          - name: OD_CA
+            value: '/usr/local/tomee/conf/cert/odca/icp4i-od-cacert.pem'
           - name: OD_WEB_CONSOLE_CONTEXT_ROOT
-            value: {{ .Values.ingress.odURI | quote }}                                    
+            value: {{ .Values.ingress.odURI | quote }}
         ports:
         livenessProbe:
           tcpSocket:
             port: 8073
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
             port: 8073
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
         volumeMounts:
         - name: ibm-ca-chain
           mountPath: "/usr/local/tomee/conf/cert/ibmca"
         - name: icp4i-od-ca-certificate
-          mountPath: "/usr/local/tomee/conf/cert/odca" 
+          mountPath: "/usr/local/tomee/conf/cert/odca"
         - name: mng-shared
-          mountPath: "/mnt/icp4iod/shared" 
-          readOnly: false 
+          mountPath: "/mnt/icp4iod/shared"
+          readOnly: false
 #######################################################################
-####################### sidecar legacy-ui #############################         
+####################### sidecar legacy-ui #############################
       - name: legacy-ui
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdLegacyUi }}"
-        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }} 
+        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         command: ["/go/bin/query-linux","--es.use-aliases=true", "--query.base-path=/{{ .Values.ingress.odURI }}/jaeger"]
         volumeMounts:
         - name: icp4i-od-ca-certificate
           mountPath: "/usr/share/jaeger/ca/certs"
         resources:
-{{ toYaml .Values.resources.legacy_ui | indent 11 }}                                              
+{{ toYaml .Values.resources.legacy_ui | indent 11 }}
         env:
           - name: SPAN_STORAGE_TYPE
-            value: elasticsearch            
+            value: elasticsearch
           - name: ES_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -469,7 +469,7 @@ spec:
                 key: username
           - name: ES_SERVER_URLS
             value: {{ template "elasticsearch-url-name" . }}
-          - name: ES_TLS_CA     
+          - name: ES_TLS_CA
             value: '/usr/share/jaeger/ca/certs/icp4i-od-cacert.pem'
           - name: QUERY_BASE_PATH
             value: '/jaeger'
@@ -479,34 +479,34 @@ spec:
             protocol: TCP
           - name: liveliness
             containerPort: 14987
-            protocol: TCP            
+            protocol: TCP
         livenessProbe:
           tcpSocket:
             port: 14987
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
             port: 16686
           initialDelaySeconds: 30
           timeoutSeconds: 2
-          periodSeconds: 5        
+          periodSeconds: 5
           failureThreshold: 2
-####################################################################### 
+#######################################################################
       initContainers:
       - name: config-db-init
         image: "{{ trimSuffix "/" .Values.global.images.registry }}/{{ .Values.global.images.OdConfigDb }}"
-        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}   
+        imagePullPolicy: {{ .Values.global.images.pullPolicy | quote }}
         command: ["/usr/local/bin/icp4i_od_init_config_db.sh"]
         volumeMounts:
         - name: config-db
-          mountPath: /mnt/data         
+          mountPath: /mnt/data
         terminationMessagePath: "/run/termination-log"
         resources:
-{{ toYaml .Values.resources.config_db | indent 11 }}                                      
-####################################################################### 
+{{ toYaml .Values.resources.config_db | indent 11 }}
+#######################################################################
       volumes:
       - name: registration-data
         emptyDir: {}
@@ -521,8 +521,8 @@ spec:
       - name: ibm-ca-chain
         secret:
           secretName: icp4i-od-oidc-secret
-          #optional: true      
-  volumeClaimTemplates: 
+          #optional: true
+  volumeClaimTemplates:
   - metadata:
       name: config-db
       labels:
@@ -559,4 +559,3 @@ spec:
       resources:
         requests:
           storage: 100M
-    
